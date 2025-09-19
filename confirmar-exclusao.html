@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar Exclusão - SGT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="estiloGlobais.css">
+    <style>
+        .confirmacao-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .warning-icon {
+            font-size: 4rem;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="confirmacao-modal">
+        <div class="modal-content">
+            <div class="warning-icon">⚠️</div>
+            <h2>Confirmar Exclusão</h2>
+            <p>Tem certeza que deseja excluir esta tarefa?</p>
+            <p><strong>Esta ação não pode ser desfeita!</strong></p>
+            
+            <div class="modal-actions">
+                <a href="dashboard.html?action=deleted#deleted" class="btn btn-danger">Sim, Excluir</a>
+                <a href="detalhes-tarefa.html" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

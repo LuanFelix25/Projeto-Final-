@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Gerenciamento de Tarefas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="estiloGlobais.css">
+    <style>
+        /* Estados e Mensagens de Feedback */
+        .feedback-message {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+            font-weight: 500;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .success-message {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        
+        .info-message {
+            background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+            border: 2px solid #17a2b8;
+            color: #0c5460;
+        }
+        
+        .warning-message {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+
+        /* Estados dinâmicos das tarefas */
+        .nova-tarefa {
+            border: 3px solid #28a745;
+            box-shadow: 0 0 20px rgba(40, 167, 69, 0.4);
+            animation: highlight-green 3s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nova-tarefa::before {
+            content: "NOVA";
+            position: absolute;
+            top: 10px;
+            right: -30px;
+            background: #28a745;
+            color: white;
+            padding: 5px 40px;
+            font-size: 12px;
+            font-weight: bold;
+            transform: rotate(45deg);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .tarefa-editada-card {
+            border: 3px solid #17a2b8;
+            box-shadow: 0 0 20px rgba(23, 162, 184, 0.4);
+            animation: highlight-blue 3s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tarefa-editada-card::before {
+            content: "EDITADA";
+            position: absolute;
+            top: 10px;
+            right: -30px;
+            background: #17a2b8;
+            color: white;
+            padding: 5px 40px;
+            font-size: 12px;
+            font-weight: bold;
+            transform: rotate(45deg);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .tarefa-excluida {
+            opacity: 0.2;
+            filter: grayscale(100%);
+            text-decoration: line-through;
+            transform: scale(0.95);
+            transition: all 0.5s ease;
+        }
+
+        /* Animações */
+        @keyframes highlight-green {
+            0% { background-color: #d4edda; transform: scale(1.02); }
+            50% { background-color: #c3e6cb; }
+            100% { background-color: white; transform: scale(1); }
+        }
+        
+        @keyframes highlight-blue {
+            0% { background-color: #d1ecf1; transform: scale(1.02); }
+            50% { background-color: #bee5eb; }
+            100% { background-color: white; transform: scale(1); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Lógica CSS para mostrar estados baseado na URL usando :target */
+        #created:target ~ .main-content .feedback-message.success-message { display: block; }
+        #created:target ~ .main-content .nova-tarefa { display: block; animation: fadeInUp 0.8s ease; }
+        
+        #updated:target ~ .main-content .feedback-message.info-message { display: block; }
+        #updated:target ~ .main-content .tarefa-editada-card { display: block; animation: fadeInUp 0.8s ease; }
+        #updated:target ~ .main-content .task-card:nth-of-type(3) { display: none; }
+        
+        #deleted:target ~ .main-content .feedback-message.warning-message { display: block; }
+        #deleted:target ~ .main-content .task-card:nth-of-type(3) { display: none; }
+        #deleted:target ~ .main-content #empty-message { display: block !important; }
+
+        /* Estados padrão - esconder elementos especiais */
+        .nova-tarefa, .tarefa-editada-card {
+            display: none;
+        }
+
+        /* Melhorias visuais gerais */
+        .task-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Contador de tarefas */
+        .task-counter {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .counter-number {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        /* Filtros de status */
+        .status-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            background: white;
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        /* Responsividade aprimorada */
+        @media (max-width: 768px) {
+            .nova-tarefa::before,
+            .tarefa-editada-card::before {
+                font-size: 10px;
+                padding: 3px 30px;
+                right: -25px;
+            }
+            
+            .task-counter {
+                padding: 10px;
+            }
+            
+            .counter-number {
+                font-size: 1.5rem;
+            }
+            
+            .status-filters {
+                justify-content: center;
+            }
+        }
+
+        /* Estados específicos para ações */
+        .action-feedback {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        /* Efeitos de loading simulados */
+        .loading-simulation {
+            position: relative;
+        }
+        
+        .loading-simulation::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Melhor organização do grid */
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        /* Empty state melhorado */
+        #empty-message {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+            display: none;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        #empty-message h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        
+        #empty-message .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Âncoras invisíveis para controle de estado via :target -->
+    <div id="created"></div>
+    <div id="updated"></div>
+    <div id="deleted"></div>
+
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div>
+                <header class="sidebar-header">
+                    <h2>Dashboard</h2>
+                </header>
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li><a href="dashboard.html" class="active">📋 Minhas Tarefas</a></li>
+                        <li><a href="criar-tarefa.html">➕ Criar Tarefa</a></li>
+                        <li><a href="#configuracoes" onclick="alert('Configurações em desenvolvimento')">⚙️ Configurações</a></li>
+                        <li><a href="login.html" onclick="return confirm('Deseja realmente sair?')">🚪 Sair</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <footer class="sidebar-footer">
+                <p>&copy; 2025 Projeto Acadêmico</p>
+            </footer>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <button class="mobile-menu-button" onclick="alert('Menu mobile - funcionalidade em desenvolvimento')">&#9776;</button>
+                <h1>📋 Minhas Tarefas</h1>
+                <a href="criar-tarefa.html" class="btn btn-primary" style="width: auto;">➕ Nova Tarefa</a>
+            </header>
+
+            <!-- Contador de Tarefas -->
+            <div class="task-counter">
+                <span class="counter-number">4</span>
+                <span>Tarefas Ativas</span>
+            </div>
+
+            <!-- Filtros de Status -->
+            <div class="status-filters">
+                <a href="#" class="filter-btn active">🔄 Todas</a>
+                <a href="#" class="filter-btn">🔴 Pendentes</a>
+                <a href="#" class="filter-btn">🟡 Em Andamento</a>
+                <a href="#" class="filter-btn">🟢 Concluídas</a>
+            </div>
+
+            <!-- Mensagens de Feedback -->
+            <div class="feedback-message success-message">
+                🎉 <strong>Sucesso!</strong> Nova tarefa criada e adicionada à sua lista!
+            </div>
+            
+            <div class="feedback-message info-message">
+                ✏️ <strong>Atualizado!</strong> Tarefa "Revisar proposta do cliente" foi modificada com sucesso!
+            </div>
+            
+            <div class="feedback-message warning-message">
+                🗑️ <strong>Excluído!</strong> Tarefa "Revisar proposta do cliente" foi removida permanentemente!
+            </div>
+
+            <section class="tasks-grid">
+                <!-- Nova Tarefa (só aparece quando criada) -->
+                <article class="task-card nova-tarefa">
+                    <div class="task-card-header">
+                        <h3>✨ Minha Nova Tarefa</h3>
+                        <span title="Pendente">🔴</span>
+                    </div>
+                    <div class="task-card-body">
+                        <p><strong>Recém-criada!</strong> Esta é a tarefa que você acabou de adicionar ao sistema. Ela está pronta para ser trabalhada!</p>
+                        <small style="color: #6c757d;">📅 Criada agora mesmo</small>
+                    </div>
+                    <div class="task-card-footer">
+                        <a href="editar-tarefa.html" class="btn btn-secondary">✏️ Editar</a>
+                        <a href="detalhes-tarefa.html" class="btn btn-primary">👁️ Detalhes</a>
+                    </div>
+                </article>
+
+                <!-- Tarefa Editada (substitui a primeira quando editada) -->
+                <article class="task-card tarefa-editada-card">
+                    <div class="task-card-header">
+                        <h3>📝 Revisar proposta - ATUALIZADA</h3>
+                        <span title="Em andamento">🟡</span>
+                    </div>
+                    <div class="task-card-body">
+                        <p><strong>MODIFICADO:</strong> Verificar os valores e o escopo do projeto antes de enviar para o cliente. Focar na cláusula 5.3 sobre prazos de entrega.</p>
+                        <small style="color: #17a2b8;">🔄 Status alterado para "Em andamento"</small>
+                    </div>
+                    <div class="task-card-footer">
+                        <a href="editar-tarefa.html" class="btn btn-secondary">✏️ Editar</a>
+                        <a href="detalhes-tarefa.html" class="btn btn-primary">👁️ Detalhes</a>
+                    </div>
+                </article>
+
+                <!-- Task Card 1 (original) -->
+                <article class="task-card">
+                    <div class="task-card-header">
+                        <h3>📄 Revisar proposta do cliente</h3>
+                        <span title="Pendente">🔴</span>
+                    </div>
+                    <div class="task-card-body">
+                        <p>Verificar os valores e o escopo do projeto antes de enviar para o cliente.</p>
+                        <small style="color: #6c757d;">📅 Criada em 24/08/2025</small>
+                    </div>
+                    <div class="task-card-footer">
+                        <a href="editar-tarefa.html" class="btn btn-secondary">✏️ Editar</a>
+                        <a href="detalhes-tarefa.html" class="btn btn-primary">👁️ Detalhes</a>
+                    </div>
+                </article>
+
+                <!-- Task Card 2 -->
+                <article class="task-card">
+                     <div class="task-card-header">
+                        <h3>🤝 Agendar reunião de kickoff</h3>
+                        <span title="Pendente">🔴</span>
+                    </div>
+                    <div class="task-card-body">
+                        <p>Marcar a reunião inicial com a equipe e o cliente para alinhar as expectativas.</p>
+                        <small style="color: #6c757d;">📅 Criada em 23/08/2025</small>
+                    </div>
+                    <div class="task-card-footer">
+                       <a href="editar-tarefa.html" class="btn btn-secondary">✏️ Editar</a>
+                       <a href="detalhes-tarefa.html" class="btn btn-primary">👁️ Detalhes</a>
+                    </div>
+                </article>
+
+                <!-- Task Card 3 -->
+                <article class="task-card">
+                     <div class="task-card-header">
+                        <h3>🎨 Desenvolver wireframes</h3>
+                        <span title="Em andamento">🟡</span>
+                    </div>
+                    <div class="task-card-body">
+                        <p>Criar os wireframes de baixa fidelidade para as telas principais da aplicação.</p>
+                        <small style="color: #ffc107;">⏳ Em andamento desde 22/08/2025</small>
+                    </div>
+                    <div class="task-card-footer">
+                        <a href="editar-tarefa.html" class="btn btn-secondary">✏️ Editar</a>
+                        <a href="detalhes-tarefa.html" class="btn btn-primary">👁️ Detalhes</a>
+                    </div>
+                </article>
+
+                <!-- Task Card 4 -->
+                <article class="task-card">
+                     <div class="task-card-header">
+                        <h3>✅ Configurar ambiente de desenvolvimento</h3>
+                        <span title="Concluída">🟢</span>
+                    </div>
+                    <div class="task-card-body">
+                        <p>Instalar e configurar todas as ferramentas necessárias para o desenvolvimento do projeto.</p>
+                        <small style="color: #28a745;">✅ Concluída em 21/08/2025</small>
+                    </div>
+                    <div class="task-card-footer">
+                        <a href="editar-tarefa.html" class="btn btn-secondary">✏️ Editar</a>
+                        <a href="detalhes-tarefa.html" class="btn btn-primary">👁️ Detalhes</a>
+                    </div>
+                </article>
+
+                <!-- Estado vazio (após exclusões) -->
+                <div id="empty-message">
+                    <div class="empty-icon">📝</div>
+                    <h3>Nenhuma tarefa encontrada</h3>
+                    <p>Parece que você excluiu algumas tarefas. Que tal <a href="criar-tarefa.html">criar uma nova tarefa</a> para começar?</p>
+                    <a href="criar-tarefa.html" class="btn btn-primary" style="margin-top: 15px;">➕ Criar Primeira Tarefa</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Sistema de detecção de estado via URL
+        function initDashboard() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            
+            // Remover estado anterior
+            document.body.removeAttribute('data-action');
+            
+            if (action) {
+                // Aplicar novo estado
+                document.body.setAttribute('data-action', action);
+                
+                // Trigger da âncora correspondente
+                if (document.getElementById(action)) {
+                    location.hash = action;
+                }
+                
+                // Atualizar contador baseado na ação
+                updateTaskCounter(action);
+                
+                // Auto-remove mensagem após 5 segundos
+                setTimeout(() => {
+                    const messages = document.querySelectorAll('.feedback-message');
+                    messages.forEach(msg => msg.style.display = 'none');
+                }, 5000);
+            }
+        }
+        
+        function updateTaskCounter(action) {
+            const counterElement = document.querySelector('.counter-number');
+            let currentCount = parseInt(counterElement.textContent);
+            
+            switch(action) {
+                case 'created':
+                    counterElement.textContent = currentCount + 1;
+                    break;
+                case 'deleted':
+                    counterElement.textContent = Math.max(0, currentCount - 1);
+                    break;
+                case 'updated':
+                    // Não muda o contador para edição
+                    break;
+            }
+        }
+        
+        // Filtros de status (simulação)
+        function initFilters() {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active de todos
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    
+                    // Adiciona active ao clicado
+                    this.classList.add('active');
+                    
+                    // Simula filtro (você pode expandir isso)
+                    const filterText = this.textContent.trim();
+                    console.log('Filtrar por:', filterText);
+                });
+            });
+        }
+        
+        // Animações de entrada
+        function animateCards() {
+            const cards = document.querySelectorAll('.task-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.style.animation = 'fadeInUp 0.6s ease forwards';
+            });
+        }
+        
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            initDashboard();
+            initFilters();
+            animateCards();
+        });
+        
+        // Atualizar quando a URL mudar
+        window.addEventListener('popstate', initDashboard);
+    </script>
+</body>
+</html>
