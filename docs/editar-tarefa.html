@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Tarefa - SGT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="estiloGlobais.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div>
+                <header class="sidebar-header">
+                    <h2>Dashboard</h2>
+                </header>
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li><a href="dashboard.html" class="active">Minhas Tarefas</a></li>
+                        <li><a href="criar-tarefa.html">Criar Tarefa</a></li>
+                        <li><a href="#" onclick="alert('Configurações em desenvolvimento')">Configurações</a></li>
+                        <li><a href="login.html" onclick="alert('Logout realizado com sucesso!')">Sair</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <footer class="sidebar-footer">
+                <p>&copy; 2025 Projeto Acadêmico</p>
+            </footer>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <button class="mobile-menu-button" onclick="alert('Menu mobile - funcionalidade em desenvolvimento')">&#9776;</button>
+                <h1>Editar Tarefa</h1>
+                 <a href="dashboard.html" class="btn btn-secondary" style="width: auto;" onclick="return confirm('Deseja cancelar? As alterações não serão salvas.')">Cancelar</a>
+            </header>
+
+            <section class="task-details-card">
+                <form action="dashboard.html?action=updated#updated" method="get">
+                    <div class="form-group">
+                        <label for="titulo">Título da Tarefa</label>
+                        <input type="text" id="titulo" class="form-control" value="Revisar proposta do cliente" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descricao">Descrição</label>
+                        <textarea id="descricao" class="form-control" rows="5">Verificar os valores e o escopo do projeto antes de enviar para o cliente. Focar na cláusula 5.3 sobre prazos de entrega.</textarea>
+                    </div>
+                     <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" class="form-control">
+                            <option value="pendente">Pendente</option>
+                            <option value="em_andamento" selected>Em Andamento</option>
+                            <option value="concluida">Concluída</option>
+                        </select>
+                    </div>
+                    <div class="task-actions" style="justify-content: space-between;">
+                        <div>
+                             <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                             <a href="dashboard.html" class="btn btn-secondary" style="background-color: var(--border-color); margin-left: 1rem;">Cancelar</a>
+                        </div>
+                        <a href="dashboard.html?action=deleted" class="btn btn-danger">Excluir Tarefa</a>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
